@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  avatarUrl    String?
+  googleId     String?  @unique
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  documents Document[]
+  versions  VersionSnapshot[]
+}
+
+model Document {
+  id        String         @id @default(cuid())
+  title     String
+  content   String         @default("")
+  status    DocumentStatus @default(draft)
+  ownerId   String
+  projectId String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  owner    User              @relation(fields: [ownerId], references: [id])
+  versions VersionSnapshot[]
+
+  @@index([ownerId])
+  @@index([projectId])
+}
+
+model VersionSnapshot {
+  id          String   @id @default(cuid())
+  documentId  String
+  version     Int
+  diff        String
+  snapshot    String
+  createdAt   DateTime @default(now())
+  createdById String
+
+  document  Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdBy User     @relation(fields: [createdById], references: [id])
+
+  @@unique([documentId, version])
+  @@index([documentId])
+}
+
+enum DocumentStatus {
+  draft
+  published
+  archived
+}

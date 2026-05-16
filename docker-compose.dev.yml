@@ -1,0 +1,35 @@
+# 개발 환경용 — DB와 MinIO만 실행, 앱은 로컬에서 직접 실행
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: vaultdocs
+      POSTGRES_USER: vaultdocs
+      POSTGRES_PASSWORD: vaultdocs_dev
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vaultdocs"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: vaultdocs
+      MINIO_ROOT_PASSWORD: vaultdocs_dev
+    volumes:
+      - minio_dev_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+volumes:
+  postgres_dev_data:
+  minio_dev_data:
