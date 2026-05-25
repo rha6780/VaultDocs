@@ -34,17 +34,54 @@ import {
   IconFolderOpen,
   IconFolderPlus,
   IconChevronRight,
+  IconFileText,
 } from '@tabler/icons-react';
 import { useAuthStore } from '@/store/auth';
 import { getWorkspaces, createWorkspace } from '@/api/workspaces';
 import { getFolders } from '@/api/folders';
-import type { Workspace, Folder } from '@shared/types';
+import { getDocuments } from '@/api/documents';
+import type { Workspace, Folder, DocumentSummary } from '@shared/types';
 import { useState } from 'react';
 import { notifications } from '@mantine/notifications';
 import './AppShell.css';
 
 const NAV_WIDTH = 240;
 const NAV_COLLAPSED_WIDTH = 60;
+
+// ── 문서 노드 ──────────────────────────────────────────────────────────────────
+function DocNode({ doc, depth, collapsed }: { doc: DocumentSummary; depth: number; collapsed: boolean }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isActive = location.pathname === `/documents/${doc.id}`;
+
+  if (collapsed) {
+    return (
+      <Tooltip label={doc.title} position="right" withArrow>
+        <ActionIcon
+          variant={isActive ? 'filled' : 'subtle'}
+          color={isActive ? 'blue' : 'gray'}
+          size="lg"
+          onClick={() => navigate(`/documents/${doc.id}`)}
+          style={{ width: '100%', borderRadius: rem(6) }}
+        >
+          <IconFileText size={15} />
+        </ActionIcon>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <div
+      className={`nav-row${isActive ? ' active' : ''}`}
+      onClick={() => navigate(`/documents/${doc.id}`)}
+    >
+      <div className="nav-row-label" style={{ paddingLeft: rem(12 + depth * 12) }}>
+        <IconFileText size={14} style={{ flexShrink: 0, opacity: 0.7 }} />
+        <Text size="sm" truncate>{doc.title}</Text>
+      </div>
+    </div>
+  );
+}
 
 // ── 폴더 트리 노드 ─────────────────────────────────────────────────────────────
 function FolderNode({
@@ -65,6 +102,12 @@ function FolderNode({
   const { data: children = [], isFetching } = useQuery({
     queryKey: ['folders', 'children', folder.id],
     queryFn: () => getFolders({ parentId: folder.id }),
+    enabled: opened,
+  });
+
+  const { data: folderDocs = [] } = useQuery({
+    queryKey: ['documents', 'sidebar', 'folder', folder.id],
+    queryFn: () => getDocuments({ folderId: folder.id }),
     enabled: opened,
   });
 
@@ -129,6 +172,9 @@ function FolderNode({
           selectedFolderId={selectedFolderId}
         />
       ))}
+      {opened && folderDocs.map((doc) => (
+        <DocNode key={doc.id} doc={doc} depth={depth + 1} collapsed={collapsed} />
+      ))}
     </div>
   );
 }
@@ -152,6 +198,12 @@ function WorkspaceNode({
   const { data: folders = [], isFetching } = useQuery({
     queryKey: ['folders', 'root', workspace.id],
     queryFn: () => getFolders({ workspaceId: workspace.id }),
+    enabled: opened,
+  });
+
+  const { data: wsDocs = [] } = useQuery({
+    queryKey: ['documents', 'sidebar', 'workspace', workspace.id],
+    queryFn: () => getDocuments({ workspaceId: workspace.id, folderId: null }),
     enabled: opened,
   });
 
@@ -213,6 +265,9 @@ function WorkspaceNode({
           collapsed={collapsed}
           selectedFolderId={selectedFolderId}
         />
+      ))}
+      {opened && wsDocs.map((doc) => (
+        <DocNode key={doc.id} doc={doc} depth={0} collapsed={collapsed} />
       ))}
     </div>
   );
