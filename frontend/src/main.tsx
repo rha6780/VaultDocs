@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
-import { MantineProvider } from '@mantine/core';
+import { MantineProvider, localStorageColorSchemeManager } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import App from './App';
 import '@mantine/core/styles.css';
@@ -14,9 +14,11 @@ const queryClient = new QueryClient({
   },
 });
 
+const colorSchemeManager = localStorageColorSchemeManager({ key: 'vaultdocs-color-scheme' });
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <MantineProvider>
+    <MantineProvider colorSchemeManager={colorSchemeManager}>
       <Notifications position="top-right" />
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>

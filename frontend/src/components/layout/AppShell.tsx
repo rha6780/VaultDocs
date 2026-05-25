@@ -99,9 +99,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Menu.Target>
             <Menu.Dropdown>
               <Menu.Label>설정</Menu.Label>
-              <Menu.Item leftSection={<IconUser size={14} />}>프로필</Menu.Item>
-              <Menu.Item leftSection={<IconPalette size={14} />}>테마</Menu.Item>
-              <Menu.Item leftSection={<IconBell size={14} />}>알림</Menu.Item>
+              <Menu.Item leftSection={<IconUser size={14} />} onClick={() => navigate('/settings?tab=profile')}>프로필</Menu.Item>
+              <Menu.Item leftSection={<IconPalette size={14} />} onClick={() => navigate('/settings?tab=general')}>테마</Menu.Item>
+              <Menu.Item leftSection={<IconBell size={14} />} onClick={() => navigate('/settings?tab=notifications')}>알림</Menu.Item>
               <Menu.Divider />
               <Menu.Item color="red" leftSection={<IconLogout size={14} />} onClick={handleLogout}>
                 로그아웃
@@ -204,7 +204,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {collapsed ? (
             <Tooltip label="설정" position="right" withArrow>
               <ActionIcon
-                variant="subtle" color="gray" size="lg"
+                variant={location.pathname === '/settings' ? 'filled' : 'subtle'}
+                color={location.pathname === '/settings' ? 'blue' : 'gray'}
+                size="lg"
+                onClick={() => navigate('/settings')}
                 style={{ width: '100%', borderRadius: rem(6) }}
               >
                 <IconSettings size={18} />
@@ -214,8 +217,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <NavLink
               label="설정"
               leftSection={<IconSettings size={16} />}
-              onClick={() => {}}
-              variant="subtle"
+              active={location.pathname === '/settings'}
+              onClick={() => navigate('/settings')}
+              variant="filled"
               style={{ borderRadius: rem(6) }}
             />
           )}
