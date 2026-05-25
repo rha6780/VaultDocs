@@ -70,12 +70,8 @@ function FolderNode({
   const workspaceId = searchParams.get('workspaceId');
   const isActive = selectedFolderId === folder.id;
 
-  const handleNavigate = () => {
+  const handleClick = () => {
     navigate(`/?workspaceId=${workspaceId}&folderId=${folder.id}`);
-  };
-
-  const handleToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
     setOpened((o) => !o);
   };
 
@@ -86,7 +82,7 @@ function FolderNode({
           variant={isActive ? 'filled' : 'subtle'}
           color={isActive ? 'blue' : 'gray'}
           size="lg"
-          onClick={handleNavigate}
+          onClick={handleClick}
           style={{ width: '100%', borderRadius: rem(6) }}
         >
           <IconFolder size={16} />
@@ -104,25 +100,19 @@ function FolderNode({
         </span>
       }
       rightSection={
-        isFetching ? <Loader size={10} /> : (
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            size="sm"
-            onClick={handleToggle}
-            style={{ width: rem(24), height: rem(24) }}
-          >
-            <IconChevronRight
-              size={14}
-              style={{ transform: opened ? 'rotate(90deg)' : 'none', transition: 'transform 150ms ease' }}
-            />
-          </ActionIcon>
+        isFetching ? (
+          <Loader size={10} />
+        ) : (
+          <IconChevronRight
+            size={14}
+            style={{ transform: opened ? 'rotate(90deg)' : 'none', transition: 'transform 150ms ease' }}
+          />
         )
       }
       active={isActive}
       variant="filled"
-      onClick={handleNavigate}
-      style={{ borderRadius: rem(6), minHeight: rem(36) }}
+      onClick={handleClick}
+      style={{ borderRadius: rem(6), minHeight: rem(40), paddingTop: rem(8), paddingBottom: rem(8) }}
     >
       {opened && children.map((child) => (
         <FolderNode
@@ -159,12 +149,8 @@ function WorkspaceNode({
     enabled: opened,
   });
 
-  const handleNavigate = () => {
+  const handleClick = () => {
     navigate(`/?workspaceId=${workspace.id}`);
-  };
-
-  const handleToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
     setOpened((o) => !o);
   };
 
@@ -175,7 +161,7 @@ function WorkspaceNode({
           variant={isSelected ? 'filled' : 'subtle'}
           color={isSelected ? 'blue' : 'gray'}
           size="lg"
-          onClick={handleNavigate}
+          onClick={handleClick}
           style={{ width: '100%', borderRadius: rem(6) }}
         >
           <IconFolder size={18} />
@@ -189,25 +175,19 @@ function WorkspaceNode({
       label={<Text size="sm" fw={600}>{workspace.name}</Text>}
       leftSection={isSelected ? <IconFolderOpen size={16} color="var(--mantine-color-blue-6)" /> : <IconFolder size={16} />}
       rightSection={
-        isFetching ? <Loader size={10} /> : (
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            size="sm"
-            onClick={handleToggle}
-            style={{ width: rem(24), height: rem(24) }}
-          >
-            <IconChevronRight
-              size={14}
-              style={{ transform: opened ? 'rotate(90deg)' : 'none', transition: 'transform 150ms ease' }}
-            />
-          </ActionIcon>
+        isFetching ? (
+          <Loader size={10} />
+        ) : (
+          <IconChevronRight
+            size={14}
+            style={{ transform: opened ? 'rotate(90deg)' : 'none', transition: 'transform 150ms ease' }}
+          />
         )
       }
       active={isSelected && !selectedFolderId}
       variant="filled"
-      onClick={handleNavigate}
-      style={{ borderRadius: rem(6), minHeight: rem(36) }}
+      onClick={handleClick}
+      style={{ borderRadius: rem(6), minHeight: rem(40), paddingTop: rem(8), paddingBottom: rem(8) }}
     >
       {opened && folders.map((folder) => (
         <FolderNode
