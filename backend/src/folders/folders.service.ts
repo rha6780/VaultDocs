@@ -6,10 +6,14 @@ import type { Folder } from '@prisma/client';
 export class FoldersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** 루트 폴더 목록 (parentId = null) */
-  async findRootFolders(ownerId: string): Promise<Folder[]> {
+  /** 루트 폴더 목록 (parentId = null, workspaceId 필터 선택) */
+  async findRootFolders(ownerId: string, workspaceId?: string): Promise<Folder[]> {
     return this.prisma.folder.findMany({
-      where: { ownerId, parentId: null },
+      where: {
+        ownerId,
+        parentId: null,
+        ...(workspaceId !== undefined ? { workspaceId } : {}),
+      },
       orderBy: { name: 'asc' },
     });
   }
@@ -28,7 +32,7 @@ export class FoldersService {
     return folder;
   }
 
-  async create(data: { name: string; ownerId: string; parentId?: string }): Promise<Folder> {
+  async create(data: { name: string; ownerId: string; parentId?: string; workspaceId?: string }): Promise<Folder> {
     if (data.parentId) {
       await this.findOne(data.parentId, data.ownerId);
     }

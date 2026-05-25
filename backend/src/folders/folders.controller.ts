@@ -12,13 +12,17 @@ import { FoldersService } from './folders.service';
 export class FoldersController {
   constructor(private readonly foldersService: FoldersService) {}
 
-  /** GET /folders?parentId=xxx  (생략 시 루트) */
+  /** GET /folders?parentId=xxx&workspaceId=yyy  (parentId 생략 시 루트) */
   @Get()
-  list(@Query('parentId') parentId: string | undefined, @Req() req: Request) {
+  list(
+    @Query('parentId') parentId: string | undefined,
+    @Query('workspaceId') workspaceId: string | undefined,
+    @Req() req: Request,
+  ) {
     const user = req.user as User;
     return parentId
       ? this.foldersService.findChildren(parentId, user.id)
-      : this.foldersService.findRootFolders(user.id);
+      : this.foldersService.findRootFolders(user.id, workspaceId);
   }
 
   /** GET /folders/:id/breadcrumb */
@@ -38,11 +42,16 @@ export class FoldersController {
   /** POST /folders */
   @Post()
   create(
-    @Body() body: { name: string; parentId?: string },
+    @Body() body: { name: string; parentId?: string; workspaceId?: string },
     @Req() req: Request,
   ) {
     const user = req.user as User;
-    return this.foldersService.create({ name: body.name, ownerId: user.id, parentId: body.parentId });
+    return this.foldersService.create({
+      name: body.name,
+      ownerId: user.id,
+      parentId: body.parentId,
+      workspaceId: body.workspaceId,
+    });
   }
 
   /** PATCH /folders/:id */

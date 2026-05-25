@@ -7,6 +7,7 @@ import { StorageModule } from './storage/storage.module';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { FoldersModule } from './folders/folders.module';
+import { WorkspacesModule } from './workspaces/workspaces.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { FoldersModule } from './folders/folders.module';
     VersionsModule,
     StorageModule,
     FoldersModule,
+    WorkspacesModule,
   ],
 })
 export class AppModule {}

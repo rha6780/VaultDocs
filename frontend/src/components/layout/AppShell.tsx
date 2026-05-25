@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   AppShell,
   NavLink,
@@ -7,16 +7,20 @@ import {
   Avatar,
   Menu,
   Burger,
-  ScrollArea,
   Stack,
   ActionIcon,
   Tooltip,
   Divider,
+  ScrollArea,
+  Modal,
+  TextInput,
+  Button,
   rem,
+  Loader,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  IconFiles,
   IconLogout,
   IconChevronDown,
   IconLayoutDashboard,
@@ -25,27 +29,208 @@ import {
   IconUser,
   IconPalette,
   IconBell,
-  IconDots,
-  IconSortAscendingLetters,
-  IconClock,
   IconSettings,
+  IconFolder,
+  IconFolderOpen,
+  IconFolderPlus,
+  IconChevronRight,
 } from '@tabler/icons-react';
 import { useAuthStore } from '@/store/auth';
+import { getWorkspaces, createWorkspace } from '@/api/workspaces';
+import { getFolders } from '@/api/folders';
+import type { Workspace, Folder } from '@shared/types';
+import { useState } from 'react';
+import { notifications } from '@mantine/notifications';
 
-const NAV_WIDTH = 220;
+const NAV_WIDTH = 240;
 const NAV_COLLAPSED_WIDTH = 60;
 
-const navItems = [
-  { label: '문서', icon: IconFiles, href: '/' },
-];
+// ── 폴더 트리 노드 ─────────────────────────────────────────────────────────────
+function FolderNode({
+  folder,
+  depth,
+  collapsed,
+  selectedFolderId,
+}: {
+  folder: Folder;
+  depth: number;
+  collapsed: boolean;
+  selectedFolderId: string | null;
+}) {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [opened, setOpened] = useState(false);
 
+  const { data: children = [], isFetching } = useQuery({
+    queryKey: ['folders', 'children', folder.id],
+    queryFn: () => getFolders({ parentId: folder.id }),
+    enabled: opened,
+  });
+
+  const workspaceId = searchParams.get('workspaceId');
+  const isActive = selectedFolderId === folder.id;
+
+  const handleClick = () => {
+    navigate(`/?workspaceId=${workspaceId}&folderId=${folder.id}`);
+    if (children.length > 0 || !opened) setOpened((o) => !o);
+  };
+
+  if (collapsed) {
+    return (
+      <Tooltip label={folder.name} position="right" withArrow>
+        <ActionIcon
+          variant={isActive ? 'filled' : 'subtle'}
+          color={isActive ? 'blue' : 'gray'}
+          size="lg"
+          onClick={() => navigate(`/?workspaceId=${workspaceId}&folderId=${folder.id}`)}
+          style={{ width: '100%', borderRadius: rem(6) }}
+        >
+          <IconFolder size={16} />
+        </ActionIcon>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <NavLink
+      label={folder.name}
+      leftSection={
+        <span style={{ paddingLeft: rem(depth * 12) }}>
+          {isActive ? <IconFolderOpen size={15} /> : <IconFolder size={15} />}
+        </span>
+      }
+      rightSection={
+        isFetching ? <Loader size={10} /> :
+        children.length > 0 || !opened ? (
+          <IconChevronRight
+            size={12}
+            style={{ transform: opened ? 'rotate(90deg)' : 'none', transition: 'transform 150ms ease' }}
+          />
+        ) : null
+      }
+      active={isActive}
+      variant="filled"
+      onClick={handleClick}
+      style={{ borderRadius: rem(6) }}
+    >
+      {opened && children.map((child) => (
+        <FolderNode
+          key={child.id}
+          folder={child}
+          depth={depth + 1}
+          collapsed={collapsed}
+          selectedFolderId={selectedFolderId}
+        />
+      ))}
+    </NavLink>
+  );
+}
+
+// ── 워크스페이스 노드 ──────────────────────────────────────────────────────────
+function WorkspaceNode({
+  workspace,
+  collapsed,
+  selectedWorkspaceId,
+  selectedFolderId,
+}: {
+  workspace: Workspace;
+  collapsed: boolean;
+  selectedWorkspaceId: string | null;
+  selectedFolderId: string | null;
+}) {
+  const navigate = useNavigate();
+  const isSelected = selectedWorkspaceId === workspace.id;
+  const [opened, setOpened] = useState(isSelected);
+
+  const { data: folders = [], isFetching } = useQuery({
+    queryKey: ['folders', 'root', workspace.id],
+    queryFn: () => getFolders({ workspaceId: workspace.id }),
+    enabled: opened,
+  });
+
+  const handleClick = () => {
+    navigate(`/?workspaceId=${workspace.id}`);
+    setOpened((o) => !o);
+  };
+
+  if (collapsed) {
+    return (
+      <Tooltip label={workspace.name} position="right" withArrow>
+        <ActionIcon
+          variant={isSelected ? 'filled' : 'subtle'}
+          color={isSelected ? 'blue' : 'gray'}
+          size="lg"
+          onClick={() => navigate(`/?workspaceId=${workspace.id}`)}
+          style={{ width: '100%', borderRadius: rem(6) }}
+        >
+          <IconFolder size={18} />
+        </ActionIcon>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <NavLink
+      label={<Text size="sm" fw={600}>{workspace.name}</Text>}
+      leftSection={isSelected ? <IconFolderOpen size={16} color="var(--mantine-color-blue-6)" /> : <IconFolder size={16} />}
+      rightSection={
+        isFetching ? <Loader size={10} /> :
+        <IconChevronRight
+          size={12}
+          style={{ transform: opened ? 'rotate(90deg)' : 'none', transition: 'transform 150ms ease' }}
+        />
+      }
+      active={isSelected && !selectedFolderId}
+      variant="filled"
+      onClick={handleClick}
+      style={{ borderRadius: rem(6) }}
+    >
+      {opened && folders.map((folder) => (
+        <FolderNode
+          key={folder.id}
+          folder={folder}
+          depth={0}
+          collapsed={collapsed}
+          selectedFolderId={selectedFolderId}
+        />
+      ))}
+    </NavLink>
+  );
+}
+
+// ── 메인 레이아웃 ──────────────────────────────────────────────────────────────
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [collapsed, { toggle: toggleCollapse }] = useDisclosure(false);
+  const [wsModalOpened, { open: openWsModal, close: closeWsModal }] = useDisclosure(false);
+  const [newWsName, setNewWsName] = useState('');
+
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  const selectedWorkspaceId = searchParams.get('workspaceId');
+  const selectedFolderId = searchParams.get('folderId');
+
   const user = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
+  const queryClient = useQueryClient();
+
+  const { data: workspaces = [], isLoading: wsLoading } = useQuery({
+    queryKey: ['workspaces'],
+    queryFn: getWorkspaces,
+  });
+
+  const createWsMutation = useMutation({
+    mutationFn: (name: string) => createWorkspace(name),
+    onSuccess: (ws) => {
+      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      closeWsModal();
+      setNewWsName('');
+      navigate(`/?workspaceId=${ws.id}`);
+    },
+    onError: () => notifications.show({ message: '워크스페이스 생성 중 오류가 발생했습니다.', color: 'red' }),
+  });
 
   const handleLogout = () => {
     clearAuth();
@@ -103,9 +288,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Menu.Item leftSection={<IconPalette size={14} />} onClick={() => navigate('/settings?tab=general')}>테마</Menu.Item>
               <Menu.Item leftSection={<IconBell size={14} />} onClick={() => navigate('/settings?tab=notifications')}>알림</Menu.Item>
               <Menu.Divider />
-              <Menu.Item color="red" leftSection={<IconLogout size={14} />} onClick={handleLogout}>
-                로그아웃
-              </Menu.Item>
+              <Menu.Item color="red" leftSection={<IconLogout size={14} />} onClick={handleLogout}>로그아웃</Menu.Item>
             </Menu.Dropdown>
           </Menu>
         </Group>
@@ -114,7 +297,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* ── 사이드바 ── */}
       <AppShell.Navbar p={collapsed ? 'xs' : 'sm'} style={{ overflow: 'visible' }}>
 
-        {/* 경계선 위 접기 버튼 */}
+        {/* 접기 버튼 */}
         <Tooltip label={collapsed ? '펼치기' : '접기'} position="right" withArrow visibleFrom="sm">
           <ActionIcon
             variant="default" size="lg" radius="xl"
@@ -136,69 +319,55 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </ActionIcon>
         </Tooltip>
 
-        {/* 상단 네비게이션 */}
-        <Stack gap={4} style={{ flex: 1, overflow: 'hidden' }}>
-          <ScrollArea flex={1}>
-            <Stack gap={4}>
-              {navItems.map((item) =>
-                collapsed ? (
-                  <Tooltip key={item.href} label={item.label} position="right" withArrow>
-                    <ActionIcon
-                      variant={location.pathname === item.href ? 'filled' : 'subtle'}
-                      color={location.pathname === item.href ? 'blue' : 'gray'}
-                      size="lg"
-                      onClick={() => navigate(item.href)}
-                      style={{ width: '100%', borderRadius: rem(6) }}
-                    >
-                      <item.icon size={18} />
-                    </ActionIcon>
-                  </Tooltip>
-                ) : (
-                  <Group
-                    key={item.href}
-                    gap={0}
-                    style={{
-                      borderRadius: rem(6),
-                      overflow: 'hidden',
-                      backgroundColor: location.pathname === item.href
-                        ? 'var(--mantine-color-blue-filled)'
-                        : 'transparent',
-                    }}
-                  >
-                    <NavLink
-                      label={item.label}
-                      leftSection={<item.icon size={16} />}
-                      active={location.pathname === item.href}
-                      onClick={() => navigate(item.href)}
-                      variant="filled"
-                      style={{ borderRadius: 0, flex: 1 }}
-                    />
-                    <Menu shadow="md" width={180} withinPortal position="right-start">
-                      <Menu.Target>
-                        <ActionIcon
-                          variant="subtle"
-                          color={location.pathname === item.href ? 'white' : 'gray'}
-                          size="sm"
-                          onClick={(e) => e.stopPropagation()}
-                          style={{ borderRadius: 0, height: '100%', minHeight: rem(36) }}
-                        >
-                          <IconDots size={14} />
-                        </ActionIcon>
-                      </Menu.Target>
-                      <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
-                        <Menu.Label>설정</Menu.Label>
-                        <Menu.Item leftSection={<IconSortAscendingLetters size={14} />}>이름순 정렬</Menu.Item>
-                        <Menu.Item leftSection={<IconClock size={14} />}>최신순 정렬</Menu.Item>
-                      </Menu.Dropdown>
-                    </Menu>
-                  </Group>
+        {/* 워크스페이스 트리 */}
+        <Stack gap={0} style={{ flex: 1, overflow: 'hidden' }}>
+
+          {/* 워크스페이스 헤더 */}
+          {!collapsed && (
+            <Group justify="space-between" px={4} mb={4}>
+              <Text size="xs" fw={600} c="dimmed" tt="uppercase">워크스페이스</Text>
+              <Tooltip label="새 워크스페이스" position="right" withArrow>
+                <ActionIcon variant="subtle" color="gray" size="sm" onClick={openWsModal}>
+                  <IconFolderPlus size={14} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+          )}
+
+          <ScrollArea flex={1} offsetScrollbars>
+            <Stack gap={2}>
+              {collapsed && (
+                <Tooltip label="새 워크스페이스" position="right" withArrow>
+                  <ActionIcon variant="subtle" color="gray" size="lg" onClick={openWsModal} style={{ width: '100%', borderRadius: rem(6) }}>
+                    <IconFolderPlus size={18} />
+                  </ActionIcon>
+                </Tooltip>
+              )}
+
+              {wsLoading ? (
+                <Group justify="center" py="xs"><Loader size="xs" /></Group>
+              ) : workspaces.length === 0 ? (
+                !collapsed && (
+                  <Text size="xs" c="dimmed" ta="center" py="sm">
+                    워크스페이스를 만들어보세요
+                  </Text>
                 )
+              ) : (
+                workspaces.map((ws) => (
+                  <WorkspaceNode
+                    key={ws.id}
+                    workspace={ws}
+                    collapsed={collapsed}
+                    selectedWorkspaceId={selectedWorkspaceId}
+                    selectedFolderId={selectedFolderId}
+                  />
+                ))
               )}
             </Stack>
           </ScrollArea>
         </Stack>
 
-        {/* 하단 고정 설정 */}
+        {/* 하단 설정 */}
         <Stack gap={0} mt="auto">
           <Divider mb="xs" />
           {collapsed ? (
@@ -227,6 +396,30 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </AppShell.Navbar>
 
       <AppShell.Main>{children}</AppShell.Main>
+
+      {/* 새 워크스페이스 모달 */}
+      <Modal opened={wsModalOpened} onClose={closeWsModal} title="새 워크스페이스 만들기" centered>
+        <Stack gap="md">
+          <TextInput
+            label="이름"
+            placeholder="워크스페이스 이름을 입력하세요"
+            value={newWsName}
+            onChange={(e) => setNewWsName(e.currentTarget.value)}
+            onKeyDown={(e) => e.key === 'Enter' && createWsMutation.mutate(newWsName.trim())}
+            autoFocus
+          />
+          <Group justify="flex-end">
+            <Button variant="default" onClick={closeWsModal}>취소</Button>
+            <Button
+              onClick={() => createWsMutation.mutate(newWsName.trim())}
+              disabled={!newWsName.trim()}
+              loading={createWsMutation.isPending}
+            >
+              만들기
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </AppShell>
   );
 }

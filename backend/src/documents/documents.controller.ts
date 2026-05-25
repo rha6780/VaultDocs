@@ -9,13 +9,17 @@ import { DocumentsService } from './documents.service';
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
-  /** GET /documents?folderId=xxx  (생략 시 전체, null 문자열이면 루트) */
+  /** GET /documents?folderId=xxx&workspaceId=yyy  (folderId 생략 시 전체, null 문자열이면 루트) */
   @Get()
-  findAll(@Query('folderId') folderId: string | undefined, @Req() req: Request) {
+  findAll(
+    @Query('folderId') folderId: string | undefined,
+    @Query('workspaceId') workspaceId: string | undefined,
+    @Req() req: Request,
+  ) {
     const user = req.user as User;
     // folderId=null 쿼리 → 루트(폴더 없음) 문서만, 생략 → 전체
     const folderFilter = folderId === 'null' ? null : folderId;
-    return this.documentsService.findAllByOwner(user.id, folderFilter);
+    return this.documentsService.findAllByOwner(user.id, folderFilter, workspaceId);
   }
 
   @Get(':id')
@@ -25,13 +29,25 @@ export class DocumentsController {
   }
 
   @Post()
-  create(@Body() body: { title: string }, @Req() req: Request) {
+  create(
+    @Body() body: { title: string; folderId?: string; workspaceId?: string },
+    @Req() req: Request,
+  ) {
     const user = req.user as User;
-    return this.documentsService.create({ title: body.title, ownerId: user.id });
+    return this.documentsService.create({
+      title: body.title,
+      ownerId: user.id,
+      folderId: body.folderId,
+      workspaceId: body.workspaceId,
+    });
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: { title?: string; content?: string; folderId?: string | null }, @Req() req: Request) {
+  update(
+    @Param('id') id: string,
+    @Body() body: { title?: string; content?: string; folderId?: string | null; workspaceId?: string | null },
+    @Req() req: Request,
+  ) {
     const user = req.user as User;
     return this.documentsService.update(id, user.id, body);
   }

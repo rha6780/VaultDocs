@@ -6,11 +6,16 @@ import type { Document } from '@prisma/client';
 export class DocumentsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAllByOwner(ownerId: string, folderId?: string | null): Promise<Document[]> {
+  async findAllByOwner(
+    ownerId: string,
+    folderId?: string | null,
+    workspaceId?: string,
+  ): Promise<Document[]> {
     return this.prisma.document.findMany({
       where: {
         ownerId,
         folderId: folderId === undefined ? undefined : (folderId ?? null),
+        ...(workspaceId !== undefined ? { workspaceId } : {}),
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -22,11 +27,20 @@ export class DocumentsService {
     return doc;
   }
 
-  async create(data: { title: string; ownerId: string }): Promise<Document> {
+  async create(data: {
+    title: string;
+    ownerId: string;
+    folderId?: string;
+    workspaceId?: string;
+  }): Promise<Document> {
     return this.prisma.document.create({ data });
   }
 
-  async update(id: string, ownerId: string, data: { title?: string; content?: string; folderId?: string | null }): Promise<Document> {
+  async update(
+    id: string,
+    ownerId: string,
+    data: { title?: string; content?: string; folderId?: string | null; workspaceId?: string | null },
+  ): Promise<Document> {
     await this.findOne(id, ownerId);
     return this.prisma.document.update({ where: { id }, data });
   }

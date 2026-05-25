@@ -17,46 +17,68 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  documents Document[]
+  documents  Document[]
+  folders    Folder[]
+  versions   VersionSnapshot[]
+  workspaces Workspace[]
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner     User       @relation(fields: [ownerId], references: [id])
   folders   Folder[]
-  versions  VersionSnapshot[]
+  documents Document[]
+
+  @@index([ownerId])
 }
 
 model Folder {
-  id        String   @id @default(cuid())
-  name      String
-  ownerId   String
-  parentId  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  name        String
+  ownerId     String
+  parentId    String?
+  workspaceId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   owner     User       @relation(fields: [ownerId], references: [id])
   parent    Folder?    @relation("FolderTree", fields: [parentId], references: [id])
   children  Folder[]   @relation("FolderTree")
   documents Document[]
+  workspace Workspace? @relation(fields: [workspaceId], references: [id])
 
   @@index([ownerId])
   @@index([parentId])
+  @@index([workspaceId])
 }
 
 model Document {
-  id        String         @id @default(cuid())
-  title     String
-  content   String         @default("")
-  status    DocumentStatus @default(draft)
-  ownerId   String
-  folderId  String?
-  projectId String?
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id          String         @id @default(cuid())
+  title       String
+  content     String         @default("")
+  status      DocumentStatus @default(draft)
+  ownerId     String
+  folderId    String?
+  projectId   String?
+  workspaceId String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
-  owner    User              @relation(fields: [ownerId], references: [id])
-  folder   Folder?           @relation(fields: [folderId], references: [id])
-  versions VersionSnapshot[]
+  owner     User              @relation(fields: [ownerId], references: [id])
+  folder    Folder?           @relation(fields: [folderId], references: [id])
+  versions  VersionSnapshot[]
+  workspace Workspace?        @relation(fields: [workspaceId], references: [id])
 
   @@index([ownerId])
   @@index([folderId])
   @@index([projectId])
+  @@index([workspaceId])
 }
 
 model VersionSnapshot {

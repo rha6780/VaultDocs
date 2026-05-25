@@ -1,9 +1,8 @@
 import type { Folder } from '@shared/types';
 import client from './client';
 
-export async function getFolders(parentId?: string): Promise<Folder[]> {
-  const params = parentId ? { parentId } : {};
-  const { data } = await client.get<Folder[]>('/api/folders', { params });
+export async function getFolders(opts?: { parentId?: string; workspaceId?: string }): Promise<Folder[]> {
+  const { data } = await client.get<Folder[]>('/api/folders', { params: opts ?? {} });
   return data;
 }
 
@@ -12,8 +11,8 @@ export async function getFolderBreadcrumb(id: string): Promise<Folder[]> {
   return data;
 }
 
-export async function createFolder(name: string, parentId?: string): Promise<Folder> {
-  const { data } = await client.post<Folder>('/api/folders', { name, parentId });
+export async function createFolder(name: string, opts?: { parentId?: string; workspaceId?: string }): Promise<Folder> {
+  const { data } = await client.post<Folder>('/api/folders', { name, ...opts });
   return data;
 }
 
