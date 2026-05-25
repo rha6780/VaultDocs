@@ -185,9 +185,16 @@ export default function DashboardPage() {
   });
 
   // 현재 위치의 문서 목록
+  // - folderId 있음: 해당 폴더 내 문서만
+  // - workspaceId만 있음: 워크스페이스 루트 문서 (폴더 미지정)
+  // - 둘 다 없음: 전체 문서
   const { data: documents = [], isLoading: docsLoading, isError } = useQuery({
     queryKey: ['documents', 'list', workspaceId, folderId],
-    queryFn: () => getDocuments(folderId ?? (workspaceId ? undefined : undefined)),
+    queryFn: () => {
+      if (folderId) return getDocuments({ folderId });
+      if (workspaceId) return getDocuments({ workspaceId, folderId: null });
+      return getDocuments();
+    },
   });
 
   const createDocMutation = useMutation({

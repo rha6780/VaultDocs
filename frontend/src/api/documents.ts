@@ -1,10 +1,17 @@
 import type { Document, DocumentSummary } from '@shared/types';
 import client from './client';
 
-/** folderId: undefined → 전체 / null → 루트 / string → 해당 폴더 */
-export async function getDocuments(folderId?: string | null): Promise<DocumentSummary[]> {
+/**
+ * folderId: undefined → 필터 없음 / null → 폴더 미지정 문서만 / string → 해당 폴더
+ * workspaceId: string → 해당 워크스페이스 문서만
+ */
+export async function getDocuments(opts?: {
+  folderId?: string | null;
+  workspaceId?: string;
+}): Promise<DocumentSummary[]> {
   const params: Record<string, string> = {};
-  if (folderId !== undefined) params.folderId = folderId ?? 'null';
+  if (opts?.folderId !== undefined) params.folderId = opts.folderId ?? 'null';
+  if (opts?.workspaceId) params.workspaceId = opts.workspaceId;
   const { data } = await client.get<DocumentSummary[]>('/api/documents', { params });
   return data;
 }
