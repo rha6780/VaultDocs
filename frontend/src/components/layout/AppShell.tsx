@@ -41,6 +41,7 @@ import { getFolders } from '@/api/folders';
 import type { Workspace, Folder } from '@shared/types';
 import { useState } from 'react';
 import { notifications } from '@mantine/notifications';
+import './AppShell.css';
 
 const NAV_WIDTH = 240;
 const NAV_COLLAPSED_WIDTH = 60;
@@ -70,8 +71,12 @@ function FolderNode({
   const workspaceId = searchParams.get('workspaceId');
   const isActive = selectedFolderId === folder.id;
 
-  const handleClick = () => {
+  const handleNavigate = () => {
     navigate(`/?workspaceId=${workspaceId}&folderId=${folder.id}`);
+  };
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setOpened((o) => !o);
   };
 
@@ -82,7 +87,7 @@ function FolderNode({
           variant={isActive ? 'filled' : 'subtle'}
           color={isActive ? 'blue' : 'gray'}
           size="lg"
-          onClick={handleClick}
+          onClick={handleNavigate}
           style={{ width: '100%', borderRadius: rem(6) }}
         >
           <IconFolder size={16} />
@@ -92,28 +97,29 @@ function FolderNode({
   }
 
   return (
-    <NavLink
-      label={folder.name}
-      leftSection={
-        <span style={{ paddingLeft: rem(depth * 12) }}>
+    <div>
+      <div className={`nav-row${isActive ? ' active' : ''}`}>
+        {/* 이름 영역 — 클릭 시 이동 */}
+        <div
+          className="nav-row-label"
+          style={{ paddingLeft: rem(12 + depth * 12) }}
+          onClick={handleNavigate}
+        >
           {isActive ? <IconFolderOpen size={15} /> : <IconFolder size={15} />}
-        </span>
-      }
-      rightSection={
-        isFetching ? (
-          <Loader size={10} />
-        ) : (
-          <IconChevronRight
-            size={14}
-            style={{ transform: opened ? 'rotate(90deg)' : 'none', transition: 'transform 150ms ease' }}
-          />
-        )
-      }
-      active={isActive}
-      variant="filled"
-      onClick={handleClick}
-      style={{ borderRadius: rem(6), minHeight: rem(40), paddingTop: rem(8), paddingBottom: rem(8) }}
-    >
+          <Text size="sm" truncate>{folder.name}</Text>
+        </div>
+        {/* 화살표 — 클릭 시 펼치기/접기 */}
+        <div className="nav-row-toggle" onClick={handleToggle}>
+          {isFetching ? (
+            <Loader size={10} />
+          ) : (
+            <IconChevronRight
+              size={14}
+              style={{ transform: opened ? 'rotate(90deg)' : 'none', transition: 'transform 150ms ease' }}
+            />
+          )}
+        </div>
+      </div>
       {opened && children.map((child) => (
         <FolderNode
           key={child.id}
@@ -123,7 +129,7 @@ function FolderNode({
           selectedFolderId={selectedFolderId}
         />
       ))}
-    </NavLink>
+    </div>
   );
 }
 
@@ -149,8 +155,12 @@ function WorkspaceNode({
     enabled: opened,
   });
 
-  const handleClick = () => {
+  const handleNavigate = () => {
     navigate(`/?workspaceId=${workspace.id}`);
+  };
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setOpened((o) => !o);
   };
 
@@ -161,7 +171,7 @@ function WorkspaceNode({
           variant={isSelected ? 'filled' : 'subtle'}
           color={isSelected ? 'blue' : 'gray'}
           size="lg"
-          onClick={handleClick}
+          onClick={() => navigate(`/?workspaceId=${workspace.id}`)}
           style={{ width: '100%', borderRadius: rem(6) }}
         >
           <IconFolder size={18} />
@@ -170,25 +180,31 @@ function WorkspaceNode({
     );
   }
 
+  const isActive = isSelected && !selectedFolderId;
+
   return (
-    <NavLink
-      label={<Text size="sm" fw={600}>{workspace.name}</Text>}
-      leftSection={isSelected ? <IconFolderOpen size={16} color="var(--mantine-color-blue-6)" /> : <IconFolder size={16} />}
-      rightSection={
-        isFetching ? (
-          <Loader size={10} />
-        ) : (
-          <IconChevronRight
-            size={14}
-            style={{ transform: opened ? 'rotate(90deg)' : 'none', transition: 'transform 150ms ease' }}
-          />
-        )
-      }
-      active={isSelected && !selectedFolderId}
-      variant="filled"
-      onClick={handleClick}
-      style={{ borderRadius: rem(6), minHeight: rem(40), paddingTop: rem(8), paddingBottom: rem(8) }}
-    >
+    <div>
+      <div className={`nav-row${isActive ? ' active' : ''}`}>
+        {/* 이름 영역 — 클릭 시 이동 */}
+        <div className="nav-row-label" onClick={handleNavigate}>
+          {isSelected
+            ? <IconFolderOpen size={16} color={isActive ? '#fff' : 'var(--mantine-color-blue-6)'} />
+            : <IconFolder size={16} />
+          }
+          <Text size="sm" fw={600} truncate>{workspace.name}</Text>
+        </div>
+        {/* 화살표 — 클릭 시 펼치기/접기 */}
+        <div className="nav-row-toggle" onClick={handleToggle}>
+          {isFetching ? (
+            <Loader size={10} />
+          ) : (
+            <IconChevronRight
+              size={14}
+              style={{ transform: opened ? 'rotate(90deg)' : 'none', transition: 'transform 150ms ease' }}
+            />
+          )}
+        </div>
+      </div>
       {opened && folders.map((folder) => (
         <FolderNode
           key={folder.id}
@@ -198,7 +214,7 @@ function WorkspaceNode({
           selectedFolderId={selectedFolderId}
         />
       ))}
-    </NavLink>
+    </div>
   );
 }
 
