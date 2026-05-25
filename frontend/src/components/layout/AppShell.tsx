@@ -11,12 +11,12 @@ import {
   Stack,
   ActionIcon,
   Tooltip,
+  Divider,
   rem,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconFiles,
-  IconSettings,
   IconLogout,
   IconChevronDown,
   IconLayoutDashboard,
@@ -26,9 +26,9 @@ import {
   IconPalette,
   IconBell,
   IconDots,
-  IconPlus,
   IconSortAscendingLetters,
   IconClock,
+  IconSettings,
 } from '@tabler/icons-react';
 import { useAuthStore } from '@/store/auth';
 
@@ -64,6 +64,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       transitionDuration={200}
       transitionTimingFunction="ease"
     >
+      {/* ── 헤더 ── */}
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
           <Group>
@@ -71,9 +72,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Group gap={6}>
               <IconLayoutDashboard size={22} />
               <Text
-                fw={700}
-                size="lg"
-                visibleFrom="sm"
+                fw={700} size="lg" visibleFrom="sm"
                 style={{
                   opacity: collapsed ? 0 : 1,
                   width: collapsed ? 0 : 'auto',
@@ -112,19 +111,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </Group>
       </AppShell.Header>
 
+      {/* ── 사이드바 ── */}
       <AppShell.Navbar p={collapsed ? 'xs' : 'sm'} style={{ overflow: 'visible' }}>
-        {/* 경계선에 고정된 접기 버튼 */}
+
+        {/* 경계선 위 접기 버튼 */}
         <Tooltip label={collapsed ? '펼치기' : '접기'} position="right" withArrow visibleFrom="sm">
           <ActionIcon
-            variant="default"
-            size="md"
-            radius="xl"
+            variant="default" size="md" radius="xl"
             onClick={toggleCollapse}
             visibleFrom="sm"
             style={{
               position: 'absolute',
-              top: rem(10),
-              right: rem(-16),
+              top: rem(10), right: rem(-16),
               zIndex: 200,
               boxShadow: '0 1px 6px rgba(0,0,0,0.15)',
               background: 'var(--mantine-color-white)',
@@ -138,64 +136,88 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </ActionIcon>
         </Tooltip>
 
-        <Stack gap={4}>
-          {navItems.map((item) =>
-            collapsed ? (
-              <Tooltip key={item.href} label={item.label} position="right" withArrow>
-                <ActionIcon
-                  variant={location.pathname === item.href ? 'filled' : 'subtle'}
-                  color={location.pathname === item.href ? 'blue' : 'gray'}
-                  size="lg"
-                  onClick={() => navigate(item.href)}
-                  style={{ width: '100%', borderRadius: rem(6) }}
-                >
-                  <item.icon size={18} />
-                </ActionIcon>
-              </Tooltip>
-            ) : (
-              <Group
-                key={item.href}
-                gap={0}
-                style={{
-                  borderRadius: rem(6),
-                  overflow: 'hidden',
-                  backgroundColor: location.pathname === item.href
-                    ? 'var(--mantine-color-blue-filled)'
-                    : 'transparent',
-                }}
-              >
-                <NavLink
-                  label={item.label}
-                  leftSection={<item.icon size={16} />}
-                  active={location.pathname === item.href}
-                  onClick={() => navigate(item.href)}
-                  variant="filled"
-                  style={{ borderRadius: 0, flex: 1 }}
-                />
-                <Menu shadow="md" width={180} withinPortal position="right-start">
-                  <Menu.Target>
+        {/* 상단 네비게이션 */}
+        <Stack gap={4} style={{ flex: 1, overflow: 'hidden' }}>
+          <ScrollArea flex={1}>
+            <Stack gap={4}>
+              {navItems.map((item) =>
+                collapsed ? (
+                  <Tooltip key={item.href} label={item.label} position="right" withArrow>
                     <ActionIcon
-                      variant="subtle"
-                      color={location.pathname === item.href ? 'white' : 'gray'}
-                      size="sm"
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ borderRadius: 0, height: '100%', minHeight: rem(36) }}
+                      variant={location.pathname === item.href ? 'filled' : 'subtle'}
+                      color={location.pathname === item.href ? 'blue' : 'gray'}
+                      size="lg"
+                      onClick={() => navigate(item.href)}
+                      style={{ width: '100%', borderRadius: rem(6) }}
                     >
-                      <IconDots size={14} />
+                      <item.icon size={18} />
                     </ActionIcon>
-                  </Menu.Target>
-                  <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
-                    <Menu.Label>설정</Menu.Label>
-                    <Menu.Item leftSection={<IconSortAscendingLetters size={14} />}>
-                      이름순 정렬
-                    </Menu.Item>
-                    <Menu.Item leftSection={<IconClock size={14} />}>
-                      최신순 정렬
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              </Group>
-            )
+                  </Tooltip>
+                ) : (
+                  <Group
+                    key={item.href}
+                    gap={0}
+                    style={{
+                      borderRadius: rem(6),
+                      overflow: 'hidden',
+                      backgroundColor: location.pathname === item.href
+                        ? 'var(--mantine-color-blue-filled)'
+                        : 'transparent',
+                    }}
+                  >
+                    <NavLink
+                      label={item.label}
+                      leftSection={<item.icon size={16} />}
+                      active={location.pathname === item.href}
+                      onClick={() => navigate(item.href)}
+                      variant="filled"
+                      style={{ borderRadius: 0, flex: 1 }}
+                    />
+                    <Menu shadow="md" width={180} withinPortal position="right-start">
+                      <Menu.Target>
+                        <ActionIcon
+                          variant="subtle"
+                          color={location.pathname === item.href ? 'white' : 'gray'}
+                          size="sm"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ borderRadius: 0, height: '100%', minHeight: rem(36) }}
+                        >
+                          <IconDots size={14} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
+                        <Menu.Label>설정</Menu.Label>
+                        <Menu.Item leftSection={<IconSortAscendingLetters size={14} />}>이름순 정렬</Menu.Item>
+                        <Menu.Item leftSection={<IconClock size={14} />}>최신순 정렬</Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  </Group>
+                )
+              )}
+            </Stack>
+          </ScrollArea>
+        </Stack>
+
+        {/* 하단 고정 설정 */}
+        <Stack gap={0} mt="auto">
+          <Divider mb="xs" />
+          {collapsed ? (
+            <Tooltip label="설정" position="right" withArrow>
+              <ActionIcon
+                variant="subtle" color="gray" size="lg"
+                style={{ width: '100%', borderRadius: rem(6) }}
+              >
+                <IconSettings size={18} />
+              </ActionIcon>
+            </Tooltip>
+          ) : (
+            <NavLink
+              label="설정"
+              leftSection={<IconSettings size={16} />}
+              onClick={() => {}}
+              variant="subtle"
+              style={{ borderRadius: rem(6) }}
+            />
           )}
         </Stack>
       </AppShell.Navbar>
