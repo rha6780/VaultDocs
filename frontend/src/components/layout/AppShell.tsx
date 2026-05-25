@@ -117,12 +117,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* 경계선 위 접기 버튼 */}
         <Tooltip label={collapsed ? '펼치기' : '접기'} position="right" withArrow visibleFrom="sm">
           <ActionIcon
-            variant="default" size="md" radius="xl"
+            variant="default" size="lg" radius="xl"
             onClick={toggleCollapse}
             visibleFrom="sm"
             style={{
               position: 'absolute',
-              top: rem(10), right: rem(-16),
+              top: rem(8), right: rem(-18),
               zIndex: 200,
               boxShadow: '0 1px 6px rgba(0,0,0,0.15)',
               background: 'var(--mantine-color-body)',
@@ -130,8 +130,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             }}
           >
             {collapsed
-              ? <IconLayoutSidebarLeftExpand size={16} />
-              : <IconLayoutSidebarLeftCollapse size={16} />
+              ? <IconLayoutSidebarLeftExpand size={20} />
+              : <IconLayoutSidebarLeftCollapse size={20} />
             }
           </ActionIcon>
         </Tooltip>
