@@ -61,6 +61,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         collapsed: { mobile: !mobileOpened },
       }}
       padding="md"
+      styles={{ main: { paddingInlineStart: rem(30) } }}
       transitionDuration={200}
       transitionTimingFunction="ease"
     >
