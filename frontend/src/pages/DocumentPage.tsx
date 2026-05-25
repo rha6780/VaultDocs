@@ -13,8 +13,17 @@ import {
   Loader,
   Alert,
   Center,
+  Paper,
 } from '@mantine/core';
-import { IconArrowLeft, IconDeviceFloppy, IconHistory, IconDownload, IconAlertCircle } from '@tabler/icons-react';
+import {
+  IconArrowLeft,
+  IconDeviceFloppy,
+  IconHistory,
+  IconDownload,
+  IconAlertCircle,
+  IconPencil,
+  IconX,
+} from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
@@ -47,6 +56,7 @@ export default function DocumentPage() {
 
   const [content, setContent] = useState('');
   const [isDirty, setIsDirty] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (doc) {
@@ -59,6 +69,7 @@ export default function DocumentPage() {
     mutationFn: () => updateDocument(id!, { content }),
     onSuccess: () => {
       setIsDirty(false);
+      setIsEditing(false);
       queryClient.invalidateQueries({ queryKey: ['document', id] });
       queryClient.invalidateQueries({ queryKey: ['documents', 'list'] });
       notifications.show({ message: '저장됐습니다.', color: 'green' });
@@ -68,9 +79,13 @@ export default function DocumentPage() {
     },
   });
 
-  const handleChange = (markdown: string) => {
-    setContent(markdown);
-    setIsDirty(true);
+  const handleEdit = () => setIsEditing(true);
+
+  const handleCancel = () => {
+    // 변경 사항 되돌리기
+    if (doc) setContent(doc.content ?? '');
+    setIsDirty(false);
+    setIsEditing(false);
   };
 
   if (isLoading) {
@@ -100,6 +115,7 @@ export default function DocumentPage() {
           <Text size="sm">{doc.title}</Text>
         </Breadcrumbs>
 
+        {/* 헤더 */}
         <Group justify="space-between">
           <Group>
             <ActionIcon variant="subtle" onClick={() => navigate('/')}>
@@ -111,6 +127,7 @@ export default function DocumentPage() {
             </Badge>
             {isDirty && <Badge color="orange" variant="dot">저장 안 됨</Badge>}
           </Group>
+
           <Group>
             <Tooltip label="버전 기록">
               <ActionIcon variant="default" size="lg">
@@ -122,22 +139,53 @@ export default function DocumentPage() {
                 <IconDownload size={18} />
               </ActionIcon>
             </Tooltip>
-            <Button
-              leftSection={<IconDeviceFloppy size={16} />}
-              onClick={() => saveMutation.mutate()}
-              disabled={!isDirty}
-              loading={saveMutation.isPending}
-            >
-              저장
-            </Button>
+
+            {isEditing ? (
+              <>
+                <Button
+                  variant="default"
+                  leftSection={<IconX size={16} />}
+                  onClick={handleCancel}
+                >
+                  취소
+                </Button>
+                <Button
+                  leftSection={<IconDeviceFloppy size={16} />}
+                  onClick={() => saveMutation.mutate()}
+                  disabled={!isDirty}
+                  loading={saveMutation.isPending}
+                >
+                  저장
+                </Button>
+              </>
+            ) : (
+              <Button
+                leftSection={<IconPencil size={16} />}
+                onClick={handleEdit}
+              >
+                수정
+              </Button>
+            )}
           </Group>
         </Group>
 
-        <RichEditor
-          key={doc.id}
-          content={content}
-          onChange={handleChange}
-        />
+        {/* 에디터 / 뷰어 */}
+        {isEditing ? (
+          <RichEditor
+            key={`edit-${doc.id}`}
+            content={content}
+            onChange={(md) => { setContent(md); setIsDirty(true); }}
+          />
+        ) : (
+          <Paper withBorder radius="md" style={{ overflow: 'hidden' }}>
+            <RichEditor
+              key={`view-${doc.id}`}
+              content={content}
+              onChange={() => {}}
+              editable={false}
+            />
+          </Paper>
+        )}
       </Stack>
     </AppLayout>
   );
