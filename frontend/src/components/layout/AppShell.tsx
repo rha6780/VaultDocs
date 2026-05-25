@@ -112,22 +112,29 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </AppShell.Header>
 
       {/* ── 사이드바 ── */}
-      <AppShell.Navbar p={collapsed ? 'xs' : 'sm'} style={{ overflow: 'hidden' }}>
+      <AppShell.Navbar p={collapsed ? 'xs' : 'sm'} style={{ overflow: 'visible' }}>
 
-        {/* 접기 버튼 — 사이드바 내부 상단 */}
-        <Group justify={collapsed ? 'center' : 'flex-end'} mb={4} visibleFrom="sm">
-          <Tooltip label={collapsed ? '펼치기' : '접기'} position="right" withArrow>
-            <ActionIcon
-              variant="default" size="lg" radius="xl"
-              onClick={toggleCollapse}
-            >
-              {collapsed
-                ? <IconLayoutSidebarLeftExpand size={20} />
-                : <IconLayoutSidebarLeftCollapse size={20} />
-              }
-            </ActionIcon>
-          </Tooltip>
-        </Group>
+        {/* 경계선 위 접기 버튼 */}
+        <Tooltip label={collapsed ? '펼치기' : '접기'} position="right" withArrow visibleFrom="sm">
+          <ActionIcon
+            variant="default" size="lg" radius="xl"
+            onClick={toggleCollapse}
+            visibleFrom="sm"
+            style={{
+              position: 'absolute',
+              top: rem(10), right: rem(-18),
+              zIndex: 200,
+              boxShadow: '0 1px 6px rgba(0,0,0,0.15)',
+              background: 'var(--mantine-color-body)',
+              border: '1px solid var(--mantine-color-default-border)',
+            }}
+          >
+            {collapsed
+              ? <IconLayoutSidebarLeftExpand size={20} />
+              : <IconLayoutSidebarLeftCollapse size={20} />
+            }
+          </ActionIcon>
+        </Tooltip>
 
         {/* 상단 네비게이션 */}
         <Stack gap={4} style={{ flex: 1, overflow: 'hidden' }}>
