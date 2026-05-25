@@ -221,7 +221,10 @@ export default function DashboardPage() {
   });
 
   const createDocMutation = useMutation({
-    mutationFn: (title: string) => createDocument(title),
+    mutationFn: (title: string) => createDocument(title, {
+      folderId: folderId ?? undefined,
+      workspaceId: workspaceId ?? undefined,
+    }),
     onSuccess: (doc) => {
       queryClient.invalidateQueries({ queryKey: ['documents', 'list'] });
       closeDocModal();

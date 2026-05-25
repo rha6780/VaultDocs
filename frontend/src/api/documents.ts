@@ -21,8 +21,15 @@ export async function getDocument(id: string): Promise<Document> {
   return data;
 }
 
-export async function createDocument(title: string): Promise<Document> {
-  const { data } = await client.post<Document>('/api/documents', { title });
+export async function createDocument(
+  title: string,
+  opts?: { folderId?: string; workspaceId?: string },
+): Promise<Document> {
+  const { data } = await client.post<Document>('/api/documents', {
+    title,
+    ...(opts?.folderId ? { folderId: opts.folderId } : {}),
+    ...(opts?.workspaceId ? { workspaceId: opts.workspaceId } : {}),
+  });
   return data;
 }
 
