@@ -13,8 +13,7 @@ dist/
 build/
 */build/
 
-# Prisma
-backend/prisma/migrations/
+# Prisma (migrations must be committed for reproducibility)
 
 # Logs
 *.log

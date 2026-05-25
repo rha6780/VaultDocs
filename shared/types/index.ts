@@ -8,6 +8,17 @@ export interface User {
   createdAt: string;
 }
 
+// ─── Folder ──────────────────────────────────────────────────────────────────
+
+export interface Folder {
+  id: string;
+  name: string;
+  ownerId: string;
+  parentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── Document ────────────────────────────────────────────────────────────────
 
 export type DocumentStatus = 'draft' | 'published' | 'archived';
@@ -18,6 +29,7 @@ export interface Document {
   content: string;
   status: DocumentStatus;
   ownerId: string;
+  folderId: string | null;
   projectId: string | null;
   createdAt: string;
   updatedAt: string;
@@ -28,6 +40,7 @@ export interface DocumentSummary {
   title: string;
   status: DocumentStatus;
   ownerId: string;
+  folderId: string | null;
   projectId: string | null;
   updatedAt: string;
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
 import type { User } from '@prisma/client';
@@ -9,10 +9,13 @@ import { DocumentsService } from './documents.service';
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
+  /** GET /documents?folderId=xxx  (생략 시 전체, null 문자열이면 루트) */
   @Get()
-  findAll(@Req() req: Request) {
+  findAll(@Query('folderId') folderId: string | undefined, @Req() req: Request) {
     const user = req.user as User;
-    return this.documentsService.findAllByOwner(user.id);
+    // folderId=null 쿼리 → 루트(폴더 없음) 문서만, 생략 → 전체
+    const folderFilter = folderId === 'null' ? null : folderId;
+    return this.documentsService.findAllByOwner(user.id, folderFilter);
   }
 
   @Get(':id')
@@ -28,7 +31,7 @@ export class DocumentsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: { title?: string; content?: string }, @Req() req: Request) {
+  update(@Param('id') id: string, @Body() body: { title?: string; content?: string; folderId?: string | null }, @Req() req: Request) {
     const user = req.user as User;
     return this.documentsService.update(id, user.id, body);
   }

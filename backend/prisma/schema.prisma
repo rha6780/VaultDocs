@@ -18,7 +18,25 @@ model User {
   updatedAt    DateTime @updatedAt
 
   documents Document[]
+  folders   Folder[]
   versions  VersionSnapshot[]
+}
+
+model Folder {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String
+  parentId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner     User       @relation(fields: [ownerId], references: [id])
+  parent    Folder?    @relation("FolderTree", fields: [parentId], references: [id])
+  children  Folder[]   @relation("FolderTree")
+  documents Document[]
+
+  @@index([ownerId])
+  @@index([parentId])
 }
 
 model Document {
@@ -27,14 +45,17 @@ model Document {
   content   String         @default("")
   status    DocumentStatus @default(draft)
   ownerId   String
+  folderId  String?
   projectId String?
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
   owner    User              @relation(fields: [ownerId], references: [id])
+  folder   Folder?           @relation(fields: [folderId], references: [id])
   versions VersionSnapshot[]
 
   @@index([ownerId])
+  @@index([folderId])
   @@index([projectId])
 }
 

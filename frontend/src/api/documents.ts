@@ -1,8 +1,11 @@
 import type { Document, DocumentSummary } from '@shared/types';
 import client from './client';
 
-export async function getDocuments(): Promise<DocumentSummary[]> {
-  const { data } = await client.get<DocumentSummary[]>('/api/documents');
+/** folderId: undefined → 전체 / null → 루트 / string → 해당 폴더 */
+export async function getDocuments(folderId?: string | null): Promise<DocumentSummary[]> {
+  const params: Record<string, string> = {};
+  if (folderId !== undefined) params.folderId = folderId ?? 'null';
+  const { data } = await client.get<DocumentSummary[]>('/api/documents', { params });
   return data;
 }
 
