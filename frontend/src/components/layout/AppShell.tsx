@@ -60,8 +60,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         breakpoint: 'sm',
         collapsed: { mobile: !mobileOpened },
       }}
-      padding="md"
-      styles={{ main: { paddingInlineStart: rem(30) } }}
+      padding="lg"
       transitionDuration={200}
       transitionTimingFunction="ease"
     >
