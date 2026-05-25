@@ -8,8 +8,6 @@ import {
   Text,
   Breadcrumbs,
   Anchor,
-  Textarea,
-  Paper,
   ActionIcon,
   Tooltip,
   Loader,
@@ -21,6 +19,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
 import AppLayout from '@/components/layout/AppShell';
+import RichEditor from '@/components/editor/RichEditor';
 import { getDocument, updateDocument } from '@/api/documents';
 import type { DocumentStatus } from '@shared/types';
 
@@ -29,7 +28,6 @@ const STATUS_COLOR: Record<DocumentStatus, string> = {
   published: 'green',
   archived: 'orange',
 };
-
 const STATUS_LABEL: Record<DocumentStatus, string> = {
   draft: '초안',
   published: '게시됨',
@@ -50,7 +48,6 @@ export default function DocumentPage() {
   const [content, setContent] = useState('');
   const [isDirty, setIsDirty] = useState(false);
 
-  // 문서 로드 후 에디터 초기화
   useEffect(() => {
     if (doc) {
       setContent(doc.content ?? '');
@@ -63,7 +60,7 @@ export default function DocumentPage() {
     onSuccess: () => {
       setIsDirty(false);
       queryClient.invalidateQueries({ queryKey: ['document', id] });
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['documents', 'list'] });
       notifications.show({ message: '저장됐습니다.', color: 'green' });
     },
     onError: () => {
@@ -71,12 +68,15 @@ export default function DocumentPage() {
     },
   });
 
+  const handleChange = (markdown: string) => {
+    setContent(markdown);
+    setIsDirty(true);
+  };
+
   if (isLoading) {
     return (
       <AppLayout>
-        <Center h={300}>
-          <Loader size="sm" />
-        </Center>
+        <Center h={300}><Loader size="sm" /></Center>
       </AppLayout>
     );
   }
@@ -111,7 +111,6 @@ export default function DocumentPage() {
             </Badge>
             {isDirty && <Badge color="orange" variant="dot">저장 안 됨</Badge>}
           </Group>
-
           <Group>
             <Tooltip label="버전 기록">
               <ActionIcon variant="default" size="lg">
@@ -134,19 +133,11 @@ export default function DocumentPage() {
           </Group>
         </Group>
 
-        <Paper withBorder radius="md" p="md" style={{ minHeight: 'calc(100vh - 220px)' }}>
-          <Textarea
-            value={content}
-            onChange={(e) => {
-              setContent(e.currentTarget.value);
-              setIsDirty(true);
-            }}
-            autosize
-            minRows={20}
-            variant="unstyled"
-            styles={{ input: { fontFamily: 'monospace', fontSize: '14px' } }}
-          />
-        </Paper>
+        <RichEditor
+          key={doc.id}
+          content={content}
+          onChange={handleChange}
+        />
       </Stack>
     </AppLayout>
   );
