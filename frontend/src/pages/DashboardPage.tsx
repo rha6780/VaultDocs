@@ -46,8 +46,8 @@ import { notifications } from '@mantine/notifications';
 import AppLayout from '@/components/layout/AppShell';
 import { getDocuments, createDocument, deleteDocument } from '@/api/documents';
 import { getFolders, createFolder, deleteFolder, renameFolder, getFolderBreadcrumb } from '@/api/folders';
-import { getWorkspace } from '@/api/workspaces';
-import type { DocumentSummary, DocumentStatus, Folder } from '@shared/types';
+import { getWorkspace, getWorkspaces } from '@/api/workspaces';
+import type { DocumentSummary, DocumentStatus, Folder, Workspace } from '@shared/types';
 
 const STATUS_COLOR: Record<DocumentStatus, string> = {
   draft: 'gray',
@@ -78,6 +78,22 @@ function ThSort({ label, sortKey, current, dir, onSort }: {
         <Icon size={14} color={active ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-gray-5)'} />
       </UnstyledButton>
     </Table.Th>
+  );
+}
+
+function WorkspaceCard({ workspace, onClick }: { workspace: Workspace; onClick: () => void }) {
+  return (
+    <Card withBorder radius="md" padding="sm" style={{ cursor: 'pointer', userSelect: 'none' }} onClick={onClick}>
+      <Group gap="xs" wrap="nowrap" style={{ overflow: 'hidden' }}>
+        <IconFolder size={20} color="var(--mantine-color-blue-5)" style={{ flexShrink: 0 }} />
+        <Stack gap={2} style={{ overflow: 'hidden' }}>
+          <Text size="sm" fw={600} lineClamp={1}>{workspace.name}</Text>
+          {workspace.description && (
+            <Text size="xs" c="dimmed" lineClamp={1}>{workspace.description}</Text>
+          )}
+        </Stack>
+      </Group>
+    </Card>
   );
 }
 
@@ -161,6 +177,13 @@ export default function DashboardPage() {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('updatedAt');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  // 전체 워크스페이스 목록 (workspaceId 없을 때 그리드에 표시)
+  const { data: workspaces = [], isLoading: wsLoading } = useQuery({
+    queryKey: ['workspaces'],
+    queryFn: getWorkspaces,
+    enabled: !workspaceId,
+  });
 
   // 현재 워크스페이스 정보
   const { data: workspace } = useQuery({
@@ -272,7 +295,7 @@ export default function DashboardPage() {
       return sortDir === 'asc' ? v : -v;
     });
 
-  const isLoading = foldersLoading || docsLoading;
+  const isLoading = wsLoading || foldersLoading || docsLoading;
 
   // 헤더 타이틀
   const pageTitle = workspace ? workspace.name : '전체 문서';
@@ -330,19 +353,33 @@ export default function DashboardPage() {
           <Group justify="center" py="xl"><Loader size="sm" /></Group>
         ) : (
           <>
-            {/* 폴더 그리드 */}
-            {folders.length > 0 && (
-              <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing="sm">
-                {folders.map((folder) => (
-                  <FolderCard
-                    key={folder.id}
-                    folder={folder}
-                    onClick={() => enterFolder(folder)}
-                    onRename={handleRenameClick}
-                    onDelete={handleDeleteFolder}
-                  />
-                ))}
-              </SimpleGrid>
+            {/* 워크스페이스 그리드 (전체 뷰) / 폴더 그리드 (워크스페이스 뷰) */}
+            {!workspaceId ? (
+              workspaces.length > 0 && (
+                <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing="sm">
+                  {workspaces.map((ws) => (
+                    <WorkspaceCard
+                      key={ws.id}
+                      workspace={ws}
+                      onClick={() => setSearchParams({ workspaceId: ws.id })}
+                    />
+                  ))}
+                </SimpleGrid>
+              )
+            ) : (
+              folders.length > 0 && (
+                <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing="sm">
+                  {folders.map((folder) => (
+                    <FolderCard
+                      key={folder.id}
+                      folder={folder}
+                      onClick={() => enterFolder(folder)}
+                      onRename={handleRenameClick}
+                      onDelete={handleDeleteFolder}
+                    />
+                  ))}
+                </SimpleGrid>
+              )
             )}
 
             {/* 검색 */}
