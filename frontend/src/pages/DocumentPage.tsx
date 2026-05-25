@@ -71,7 +71,7 @@ export default function DocumentPage() {
       setIsDirty(false);
       setIsEditing(false);
       queryClient.invalidateQueries({ queryKey: ['document', id] });
-      queryClient.invalidateQueries({ queryKey: ['documents', 'list'] });
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
       notifications.show({ message: '저장됐습니다.', color: 'green' });
     },
     onError: () => {

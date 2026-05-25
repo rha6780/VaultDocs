@@ -226,7 +226,8 @@ export default function DashboardPage() {
       workspaceId: workspaceId ?? undefined,
     }),
     onSuccess: (doc) => {
-      queryClient.invalidateQueries({ queryKey: ['documents', 'list'] });
+      // 메인 목록 + 사이드바 문서 캐시 모두 갱신
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
       closeDocModal();
       setNewTitle('');
       navigate(`/documents/${doc.id}`);
@@ -291,7 +292,7 @@ export default function DashboardPage() {
     openRenameModal();
   };
 
-  const rows = documents
+  const rows = [...new Map(documents.map((d) => [d.id, d])).values()]
     .filter((d) => d.title.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
       const v = a[sortKey] < b[sortKey] ? -1 : a[sortKey] > b[sortKey] ? 1 : 0;
@@ -438,7 +439,7 @@ export default function DashboardPage() {
                     <Table.Td>
                       <DocMenu
                         docId={doc.id}
-                        onDeleted={() => queryClient.invalidateQueries({ queryKey: ['documents', 'list'] })}
+                        onDeleted={() => queryClient.invalidateQueries({ queryKey: ['documents'] })}
                       />
                     </Table.Td>
                   </Table.Tr>
