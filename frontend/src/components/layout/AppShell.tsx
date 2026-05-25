@@ -125,8 +125,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               top: rem(10), right: rem(-16),
               zIndex: 200,
               boxShadow: '0 1px 6px rgba(0,0,0,0.15)',
-              background: 'var(--mantine-color-white)',
-              border: '1px solid var(--mantine-color-gray-3)',
+              background: 'var(--mantine-color-body)',
+              border: '1px solid var(--mantine-color-default-border)',
             }}
           >
             {collapsed
