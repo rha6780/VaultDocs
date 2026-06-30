@@ -1,33 +1,49 @@
-# Environment
+# ─── Environment ─────────────────────────────────────────────────────────────
 .env
 .env.local
 .env.*.local
+.env.test
 
-# Dependencies
+# ─── Dependencies ────────────────────────────────────────────────────────────
 node_modules/
 */node_modules/
 
-# Build outputs
+# ─── Build outputs ───────────────────────────────────────────────────────────
 dist/
 */dist/
 build/
 */build/
 
-# Prisma (migrations must be committed for reproducibility)
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
 
-# Logs
+# ─── Test artifacts ──────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
 *.log
 npm-debug.log*
+pip-log.txt
 
-# OS
+# ─── OS ──────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 
-# IDE
+# ─── IDE ─────────────────────────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
+*.swo
 
-# Docker volumes (local dev)
+# ─── Docker volumes (local dev) ──────────────────────────────────────────────
 postgres_data/
 minio_data/
