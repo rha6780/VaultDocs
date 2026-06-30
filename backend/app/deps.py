@@ -1,9 +1,9 @@
 from typing import AsyncGenerator
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
-from app.database import AsyncSessionLocal
+from app.database import get_session_factory
 from app.models.user import User
 from app.services.auth import decode_access_token
 
@@ -11,7 +11,7 @@ bearer_scheme = HTTPBearer()
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    async with AsyncSessionLocal() as session:
+    async with get_session_factory()() as session:
         yield session
 
 

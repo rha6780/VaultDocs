@@ -14,6 +14,11 @@ class Settings:
 
     @property
     def database_url(self) -> str:
+        # DATABASE_URL 환경변수로 직접 지정 가능 (테스트/SQLite 용도)
+        import os
+        override = os.environ.get('DATABASE_URL')
+        if override:
+            return override
         return (
             f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"

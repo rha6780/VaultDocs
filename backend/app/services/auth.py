@@ -1,6 +1,7 @@
+import hashlib
+import hmac
 from datetime import datetime, timedelta
 from typing import Optional
-import bcrypt
 import httpx
 from jose import jwt, JWTError
 from app.config import settings
@@ -51,11 +52,11 @@ def decode_refresh_token(token: str) -> Optional[dict]:
 
 
 def hash_token(token: str) -> str:
-    return bcrypt.hashpw(token.encode(), bcrypt.gensalt()).decode()
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 def verify_token_hash(token: str, hashed: str) -> bool:
-    return bcrypt.checkpw(token.encode(), hashed.encode())
+    return hmac.compare_digest(hash_token(token), hashed)
 
 
 # ─── Google OAuth ─────────────────────────────────────────────────────────────
