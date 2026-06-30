@@ -1,28 +1,21 @@
-FROM node:20-alpine AS builder
+FROM python:3.12-slim AS base
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-COPY . .
-RUN npx prisma generate
-RUN npm run build
+# ─── Dependencies ─────────────────────────────────────────────────────────────
+FROM base AS deps
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # ─── Production image ─────────────────────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM deps AS runner
 
-WORKDIR /app
-
-ENV NODE_ENV=production
-
-COPY --from=builder /app/package*.json ./
-RUN npm ci --omit=dev
-
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY . .
 
 EXPOSE 4000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 4000"]
