@@ -67,5 +67,12 @@ class Settings:
         default='http://localhost:3000',
     ).split(',')
 
+    # Anthropic
+    anthropic_api_key: str = config('ANTHROPIC_API_KEY', default='')
+
+    # Celery / Redis
+    celery_broker_url: str = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+    celery_result_backend: str = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+
 
 settings = Settings()

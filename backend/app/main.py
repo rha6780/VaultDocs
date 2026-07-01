@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import init_db
-from app.routers import auth, workspaces, folders, documents, storage
+from app.routers import ai, auth, documents, folders, storage, workspaces
 
 
 @asynccontextmanager
@@ -33,6 +33,7 @@ app.include_router(workspaces.router, prefix='/api/workspaces', tags=['workspace
 app.include_router(folders.router, prefix='/api/folders', tags=['folders'])
 app.include_router(documents.router, prefix='/api/documents', tags=['documents'])
 app.include_router(storage.router, prefix='/api/storage', tags=['storage'])
+app.include_router(ai.router, prefix='/api/ai', tags=['ai'])
 
 
 @app.get('/health')
